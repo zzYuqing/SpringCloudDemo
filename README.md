@@ -1,0 +1,1 @@
+通过rowSource文件夹提供的数据开始实践本次项目，本次项目为《SpringCloud+RabbitMQ+Docker+Redis+搜索+分布式，系统详解springcloud微服务技术栈课程|黑马程序员Java微服务》的跟做实验
