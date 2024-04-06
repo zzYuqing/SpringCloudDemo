@@ -27,3 +27,10 @@ eureka:
 #user-service:
 #  ribbon:
 #    NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RandomRule
+
+#启动饿依赖
+ribbon:
+  eager-load:
+    enabled: true
+    clients:
+      - user-service
