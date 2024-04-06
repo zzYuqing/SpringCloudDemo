@@ -22,3 +22,8 @@ eureka:
   client:
     service-url:
       defaultZone: http://127.0.0.1:12345/eureka
+
+#使用了@Bean来配置复杂均衡的策略的话，就不需要再在配置文件里配置了
+#user-service:
+#  ribbon:
+#    NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RandomRule
