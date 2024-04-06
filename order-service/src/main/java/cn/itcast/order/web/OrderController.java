@@ -23,7 +23,10 @@ public class OrderController {
     public Order queryOrderByUserId(@PathVariable("orderId") Long orderId) {
         // 根据id查询订单并返回
         Order order=orderService.queryOrderById(orderId);
-        String url="http://localhost:8081/user/"+order.getUserId();
+        //可通过直接http访问
+//        String url="http://localhost:8081/user/"+order.getUserId();
+        // 将url改为目标服务名
+        String url="http://user-service/user/"+order.getUserId();
         order.setUser(restTemplate.getForObject(url, User.class));
 
         return order;
