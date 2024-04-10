@@ -12,7 +12,7 @@ spring:
     nacos:
       server-addr: localhost:8848
       discovery:
-        cluster-name: south
+        cluster-name: north
 mybatis:
   type-aliases-package: cn.itcast.user.pojo
   configuration:

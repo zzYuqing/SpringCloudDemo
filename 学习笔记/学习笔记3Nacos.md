@@ -211,3 +211,34 @@ user-service:
 另外，如果权重被调为0的话，一次都不会被调用。（如果同时还关掉UserApplication2，那么order宁愿去跨集群调用UserApplication3，也不会调用它）
 
 这是一种服务器维修的办法，调成0后，不会新增访问用户，用户量会逐渐下降至没有，此时对服务器进行维修，等到维修结束后，慢慢增加权重，一开始只放少量用户进来，测试一下性能，如果效果不错的话，再继续增加。
+
+# 环境隔离
+
+通过放在不同的命名空间实现，不同命名空间的实例是不能互相访问的，所以就被隔离了。具体做法如下：
+
+新建命名空间：
+
+![image-20240410172731468](学习笔记3Nacos.assets/image-20240410172731468.png)
+
+效果：
+
+<img src="学习笔记3Nacos.assets/image-20240410173715129.png" alt="image-20240410173715129" style="zoom:50%;" />
+
+复制命名空间ID。打开order服务的application文件，配置命名空间为刚刚复制的ID：
+
+<img src="学习笔记3Nacos.assets/image-20240410173904244.png" alt="image-20240410173904244" style="zoom:50%;" />
+
+重启order服务，此时public命名空间只有user了，dev命名空间出现了order。
+
+public：
+
+<img src="学习笔记3Nacos.assets/image-20240410174050958.png" alt="image-20240410174050958" style="zoom:50%;" />
+
+dev：
+
+![image-20240410174103734](学习笔记3Nacos.assets/image-20240410174103734.png)
+
+此时运行`http://localhost:8080/order/102` 报错找不到实例：
+![image-20240410174808450](学习笔记3Nacos.assets/image-20240410174808450.png)
+
+实现了环境隔离。
