@@ -125,7 +125,7 @@ Ribbon默认是采用懒加载，即第一次访问时才会去创建`LoadBalanc
 打开order的application文件，添加：
 
 ```yml
-#启动饿依赖
+#启动饿加载
 ribbon:
   eager-load:
     enabled: true
