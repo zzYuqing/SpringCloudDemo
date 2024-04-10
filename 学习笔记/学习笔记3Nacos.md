@@ -137,3 +137,77 @@ spring:
 <img src="学习笔记3Nacos.assets/image-20240410150123453.png" alt="image-20240410150123453" style="zoom:50%;" />
 
 也就是说，服务发现部分和eureka还是一样的，不需要修改，服务注册只需要添加依赖和application配置一下端口号就行了
+
+# 服务分级存储模型
+
+看一下下面这张视频教程的截图，可以看到集群也会被再次划分，比如我之前案例里有一个User的集群，只包含两个实例，此时可以说User服务只有一个服务集群，但是在实际情况中，甚至能同时存在多个集群，比如在A地有一个User的集群（包含10个实例）、B地有一个User的集群（包含8个实例）这样子。
+
+<img src="学习笔记3Nacos.assets/image-20240410153844515.png" alt="image-20240410153844515" style="zoom:50%;" />
+
+那么此时会存在集群调用的不同情况，
+
+### 模拟User实现多个集群
+
+application中增加集群的配置cluster-name：
+
+<img src="学习笔记3Nacos.assets/image-20240410162239620.png" alt="image-20240410162239620" style="zoom:50%;" />
+
+首先配置为south，然后启动UserApplication和UserApplication2.
+
+然后配置为north，然后启动UserApplication3（这里新建了一个，之前实验没有新建它）。
+
+每次启动时，会使用当前的application，所以最后一个服务实例属于north集群，前两个属于south，效果如下图所示：
+
+![image-20240410162153960](学习笔记3Nacos.assets/image-20240410162153960.png)
+
+如果不配置这个cluster-name属性，所有启动的服务实例都会放在default下面
+
+### 配置order的服务集群
+
+假设配置到south集群：
+
+```yml
+discovery:
+  cluster-name: south
+```
+
+效果：
+
+<img src="学习笔记3Nacos.assets/image-20240410163022890.png" alt="image-20240410163022890" style="zoom:50%;" />
+
+配置负载均衡方式：
+
+```yml
+# 根据集群配置负载均衡
+user-service:
+  ribbon:
+    NFLoadBalancerRuleClassName: com.alibaba.cloud.nacos.ribbon.NacosRule
+```
+
+接下来需要观察order调用user时，是否会优先本地的集群（即south集群）
+
+我测试了5次，有两次UserApplication，三次UserApplication2，而位于其他集群的UserApplication3并没有被访问过。
+
+如果去掉最后一步的配置复杂均衡方式，还是会三个服务实例都被访问。
+
+当前配置的效果是：优先访问本地集群，在本地集群中通过随机方式实现负载均衡。
+
+另外，如果停掉south集群的UserApplication和UserApplication2，再使用oeder，发现它会调用UserApplication3，并且发出跨集群的警告：
+
+![image-20240410164622617](学习笔记3Nacos.assets/image-20240410164622617.png)
+
+也就是说，本地集群无法提供服务时，还是会通过跨集群实现。
+
+### 解决本地集群内部的随机选取
+
+不同服务器的性能不同，希望能人为修改选取时的偏重，即赋予权重，权重越高，访问频率更高一点。
+
+打开nacos控制台，修改实例的权重，假设修改UserApplication的权重为0.1（点击操作中的编辑），此时会优先对UserApplication2访问，：
+
+![image-20240410165732695](学习笔记3Nacos.assets/image-20240410165732695.png)
+
+我测试20+次，效果是UserApplication只被访问两次，可以看到权重配置的效果。
+
+另外，如果权重被调为0的话，一次都不会被调用。（如果同时还关掉UserApplication2，那么order宁愿去跨集群调用UserApplication3，也不会调用它）
+
+这是一种服务器维修的办法，调成0后，不会新增访问用户，用户量会逐渐下降至没有，此时对服务器进行维修，等到维修结束后，慢慢增加权重，一开始只放少量用户进来，测试一下性能，如果效果不错的话，再继续增加。
