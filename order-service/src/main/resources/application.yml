@@ -13,7 +13,8 @@ spring:
       server-addr: localhost:8848
       discovery:
         cluster-name: south
-        namespace: bbbe0ea3-a0e0-4bdf-9459-841ea720dd48
+        ephemeral: false # 配置为非临时实例
+#        namespace: bbbe0ea3-a0e0-4bdf-9459-841ea720dd48
 mybatis:
   type-aliases-package: cn.itcast.user.pojo
   configuration:
